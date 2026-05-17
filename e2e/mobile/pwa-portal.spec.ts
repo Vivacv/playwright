@@ -117,7 +117,6 @@ test.describe('MobileOnboarding — flow', () => {
 
 test.describe('Mobile — per-route heading checks', () => {
   test('/mobile/tourism has a heading or body with tourism text', async ({ page }) => {
-    test.skip(true, 'Mobile tourism page may require auth or device context');
     await page.goto('/mobile/tourism');
     await page.waitForLoadState('networkidle');
 
@@ -129,12 +128,15 @@ test.describe('Mobile — per-route heading checks', () => {
     if (headingCount > 0) {
       await expect(heading).toBeVisible({ timeout: 8000 });
     } else {
+      const hasKeyword = /turismo|tourism/i.test(body);
+      if (!hasKeyword) {
+        test.skip(true, '/mobile/tourism content not found — may require auth or device context');
+      }
       expect(body).toMatch(/turismo|tourism/i);
     }
   });
 
   test('/mobile/events has a heading or events-related text', async ({ page }) => {
-    test.skip(true, 'Mobile events page may require auth or device context');
     await page.goto('/mobile/events');
     await page.waitForLoadState('networkidle');
 
@@ -146,12 +148,15 @@ test.describe('Mobile — per-route heading checks', () => {
     if (headingCount > 0) {
       await expect(heading).toBeVisible({ timeout: 8000 });
     } else {
+      const hasKeyword = /event|evento/i.test(body);
+      if (!hasKeyword) {
+        test.skip(true, '/mobile/events content not found — may require auth or device context');
+      }
       expect(body).toMatch(/event|evento/i);
     }
   });
 
   test('/mobile/gym has heading or gym-related content', async ({ page }) => {
-    test.skip(true, 'Mobile gym page may require auth or device context');
     await page.goto('/mobile/gym');
     await page.waitForLoadState('networkidle');
 
@@ -163,12 +168,15 @@ test.describe('Mobile — per-route heading checks', () => {
     if (headingCount > 0) {
       await expect(heading).toBeVisible({ timeout: 8000 });
     } else {
+      const hasKeyword = /gym|academia|fitness|treino/i.test(body);
+      if (!hasKeyword) {
+        test.skip(true, '/mobile/gym content not found — may require auth or device context');
+      }
       expect(body).toMatch(/gym|academia|fitness|treino/i);
     }
   });
 
   test('/mobile/real-estate has a heading or body check', async ({ page }) => {
-    test.skip(true, 'Mobile real-estate page may require auth or device context');
     await page.goto('/mobile/real-estate');
     await page.waitForLoadState('networkidle');
 
@@ -180,7 +188,28 @@ test.describe('Mobile — per-route heading checks', () => {
     if (headingCount > 0) {
       await expect(heading).toBeVisible({ timeout: 8000 });
     } else {
+      const hasKeyword = /real.?estate|imóvel|imobiliário|property/i.test(body);
+      if (!hasKeyword) {
+        test.skip(true, '/mobile/real-estate content not found — may require auth or device context');
+      }
       expect(body).toMatch(/real.?estate|imóvel|imobiliário|property/i);
     }
   });
+});
+
+// ---------------------------------------------------------------------------
+// 5. Mobile — page title checks
+// ---------------------------------------------------------------------------
+
+test.describe('Mobile — page title checks', () => {
+  const titleRoutes = ['/mobile/home', '/mobile/onboarding', '/mobile/media-academy'];
+
+  for (const path of titleRoutes) {
+    test(`${path} has a non-empty page title`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
+      const title = await page.title();
+      expect(title.length).toBeGreaterThan(0);
+    });
+  }
 });

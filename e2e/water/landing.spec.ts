@@ -92,3 +92,42 @@ test.describe('Water — /water-landing deeper content', () => {
     expect(paragraphCount + cardCount).toBeGreaterThan(1);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Water — navigation and structure
+// ---------------------------------------------------------------------------
+
+test.describe('Water — /water-landing navigation and structure', () => {
+  test('page has at least one navigation link', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const links = page.getByRole('link');
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('body contains more than 100 characters of text', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(100);
+  });
+
+  test('at least one image or icon is present', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const count = await page.locator('img, svg').count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('page body contains water or management keywords', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body).toMatch(/água|water|gestão|management|consumo|consumption|fatura|bill/i);
+  });
+});

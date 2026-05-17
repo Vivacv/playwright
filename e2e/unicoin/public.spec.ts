@@ -116,3 +116,41 @@ test.describe('Unicoin — deeper content checks', () => {
     expect(body.trim().length).toBeGreaterThan(10);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Unicoin — features and navigation
+// ---------------------------------------------------------------------------
+
+test.describe('Unicoin — /unicoin-landing features', () => {
+  test('body contains multiple paragraphs or feature cards', async ({ page }) => {
+    await page.goto('/unicoin-landing');
+    await page.waitForLoadState('networkidle');
+
+    const pCount = await page.locator('p').count();
+    const cardCount = await page.locator('[class*="card"], [class*="feature"], section').count();
+    expect(pCount + cardCount).toBeGreaterThan(1);
+  });
+
+  test('page has at least one image or icon', async ({ page }) => {
+    await page.goto('/unicoin-landing');
+    await page.waitForLoadState('networkidle');
+
+    const count = await page.locator('img, svg').count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('body contains unicoin/blockchain keywords', async ({ page }) => {
+    await page.goto('/unicoin-landing');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body).toMatch(/unicoin|blockchain|token|crypto|wallet|coin/i);
+  });
+
+  test('/unicoin title is non-empty', async ({ page }) => {
+    await page.goto('/unicoin');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.length).toBeGreaterThan(0);
+  });
+});
