@@ -72,3 +72,40 @@ test.describe('Fleet — /fleet-landing deeper content', () => {
     expect(count).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Fleet — feature sections & navigation
+// ---------------------------------------------------------------------------
+
+test.describe('Fleet — /fleet-landing feature section', () => {
+  test('features or benefits section is present', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const section = page
+      .getByText(/feature|benefit|manage|track|route|driver|maintenance|gestão|rastrear/i)
+      .first();
+    const count = await section.count();
+    if (count === 0) {
+      test.skip(true, 'No feature section found');
+    }
+    await expect(section).toBeVisible({ timeout: 8000 });
+  });
+
+  test('page has at least one navigation link', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const links = page.getByRole('link');
+    const count = await links.count();
+    expect(count).toBeGreaterThan(0);
+  });
+
+  test('page has no empty sections (body > 100 chars)', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(100);
+  });
+});

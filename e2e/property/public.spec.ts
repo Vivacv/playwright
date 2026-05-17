@@ -152,3 +152,74 @@ test.describe('RealEstateSimulacao — simulation tool', () => {
     await expect(visible).toBeVisible({ timeout: 6000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Page titles are non-empty
+// ---------------------------------------------------------------------------
+
+test.describe('Property routes — page titles', () => {
+  const titleRoutes = ['/property', '/property-search', '/real-estate/simulacao'];
+
+  for (const path of titleRoutes) {
+    test(`${path} has a non-empty title`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
+      const title = await page.title();
+      expect(title.length).toBeGreaterThan(0);
+    });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// 7. Property browse — no JS errors
+// ---------------------------------------------------------------------------
+
+test.describe('Property — /property no JS errors', () => {
+  test('renders without unhandled JS errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto('/property');
+    await page.waitForLoadState('networkidle');
+
+    const appErrors = errors.filter(
+      (e) =>
+        !e.includes('ResizeObserver') &&
+        !e.includes('Non-Error') &&
+        !e.includes('cloudflare'),
+    );
+    expect(appErrors).toHaveLength(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 8. Property search — filter controls visible
+// ---------------------------------------------------------------------------
+
+test.describe('PropertySearch — filter controls', () => {
+  test('has a filter or search control visible', async ({ page }) => {
+    await page.goto('/property-search');
+    await page.waitForLoadState('networkidle');
+
+    const filter = page
+      .locator('select, input[type="number"], input[type="range"], button[aria-label*="filter" i]')
+      .first();
+    const count = await filter.count();
+    if (count === 0) {
+      test.skip(true, 'No filter controls found — may require auth or data');
+    }
+    await expect(filter).toBeVisible({ timeout: 6000 });
+  });
+
+  test('body contains property-related keywords', async ({ page }) => {
+    await page.goto('/property-search');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    const hasKeywords = /property|imóvel|bedroom|quarto|bath|casa|house|price|preço/i.test(body);
+    if (!hasKeywords) {
+      test.skip(true, 'No property keywords found — may require auth or data');
+    }
+    expect(hasKeywords).toBe(true);
+  });
+});

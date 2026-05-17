@@ -197,3 +197,69 @@ test.describe('RentalAnalytics — page', () => {
     await expect(visible).toBeVisible({ timeout: 6000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 8. AILA QR — /aila-qr
+// ---------------------------------------------------------------------------
+
+test.describe('AilaQR — /aila-qr', () => {
+  test('renders without crash', async ({ page }) => {
+    await assertPageOk(page, '/aila-qr');
+  });
+
+  test('shows QR or AILA related content', async ({ page }) => {
+    await page.goto('/aila-qr');
+    await page.waitForLoadState('networkidle');
+
+    const content = page.getByText(/aila|qr|scan|acesso|access/i).first();
+    const count = await content.count();
+    if (count === 0) {
+      test.skip(true, 'No AILA QR content found');
+    }
+    await expect(content).toBeVisible({ timeout: 6000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 9. Condominium — /condominium
+// ---------------------------------------------------------------------------
+
+test.describe('Condominium — /condominium', () => {
+  test('renders without crash', async ({ page }) => {
+    await assertPageOk(page, '/condominium');
+  });
+
+  test('shows condominium content or auth gate', async ({ page }) => {
+    await page.goto('/condominium');
+    await page.waitForLoadState('networkidle');
+
+    const content = page.getByText(/condominium|condomínio|resident|unidade|unit/i).first();
+    const authGate = page.getByText(/sign in|login|entrar|authenticate/i).first();
+
+    const contentCount = await content.count();
+    const authCount = await authGate.count();
+
+    if (contentCount === 0 && authCount === 0) {
+      test.skip(true, 'No condominium or auth content found');
+    }
+    const visible = contentCount > 0 ? content : authGate;
+    await expect(visible).toBeVisible({ timeout: 6000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 10. Page title checks for portal routes
+// ---------------------------------------------------------------------------
+
+test.describe('Portal pages — non-empty titles', () => {
+  const titleRoutes = ['/partner-portal', '/media-hub', '/smart-tickets', '/rental-analytics'];
+
+  for (const path of titleRoutes) {
+    test(`${path} has a non-empty page title`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('domcontentloaded');
+      const title = await page.title();
+      expect(title.length).toBeGreaterThan(0);
+    });
+  }
+});

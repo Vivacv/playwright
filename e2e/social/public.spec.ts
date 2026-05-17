@@ -104,3 +104,36 @@ test.describe('Social — content verification', () => {
     expect(linkCount + buttonCount).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Social sub-routes — no JS errors
+// ---------------------------------------------------------------------------
+
+test.describe('Social sub-routes — no JS errors', () => {
+  const routes = ['/social/feed', '/social/profile'];
+
+  for (const path of routes) {
+    test(`${path} renders without unhandled JS errors`, async ({ page }) => {
+      const errors: string[] = [];
+      page.on('pageerror', (err) => errors.push(err.message));
+
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+
+      const appErrors = errors.filter(
+        (e) =>
+          !e.includes('ResizeObserver') &&
+          !e.includes('Non-Error') &&
+          !e.includes('cloudflare'),
+      );
+      expect(appErrors).toHaveLength(0);
+    });
+  }
+
+  test('/social/feed title is non-empty', async ({ page }) => {
+    await page.goto('/social/feed');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.length).toBeGreaterThan(0);
+  });
+});
