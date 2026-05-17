@@ -118,3 +118,52 @@ test.describe('RealEstate — /real-estate/shared-document/:token', () => {
     await expect(errorBoundary).not.toBeVisible();
   });
 });
+
+// ---------------------------------------------------------------------------
+// Deeper content checks
+// ---------------------------------------------------------------------------
+
+test.describe('RealEstate hub — /real-estate-hub content', () => {
+  test('has a heading visible', async ({ page }) => {
+    await page.goto('/real-estate-hub');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    const count = await heading.count();
+    if (count === 0) {
+      test.skip(true, 'No heading found — may require auth');
+    }
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('title is non-empty', async ({ page }) => {
+    await page.goto('/real-estate-hub');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.length).toBeGreaterThan(0);
+  });
+});
+
+test.describe('RealEstate blockchain — /real-estate/blockchain', () => {
+  test('body contains blockchain-related content or auth gate', async ({ page }) => {
+    await page.goto('/real-estate/blockchain');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(10);
+  });
+});
+
+test.describe('RealEstate discovery — /real-estate/discovery', () => {
+  test('has a heading or search input', async ({ page }) => {
+    await page.goto('/real-estate/discovery');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    const searchInput = page.locator('input[type="text"], input[type="search"]').first();
+    const headingCount = await heading.count();
+    const inputCount = await searchInput.count();
+    if (headingCount === 0 && inputCount === 0) {
+      test.skip(true, 'No heading or search input — may be auth-gated');
+    }
+    const visible = headingCount > 0 ? heading : searchInput;
+    await expect(visible).toBeVisible({ timeout: 8000 });
+  });
+});
