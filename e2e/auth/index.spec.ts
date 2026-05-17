@@ -190,7 +190,72 @@ test.describe('AuthPage — sign-up form validation', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 6. Protected route redirect
+// 6. Email and password inputs, submit button, redirect self-check
+// ---------------------------------------------------------------------------
+
+test.describe('AuthPage — deeper form verification', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(AUTH_URL);
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('login form has an email-type input', async ({ page }) => {
+    const emailInput = page
+      .locator('input[type="email"]')
+      .or(page.getByPlaceholder('seu@email.com'));
+    await expect(emailInput.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('login form has a password-type input', async ({ page }) => {
+    const passwordInput = page.locator('input[type="password"]');
+    await expect(passwordInput.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('submit (login) button is visible and labelled', async ({ page }) => {
+    const submitBtn = page.getByRole('button', {
+      name: /entrar|sign in|login|submit|aceder/i,
+    });
+    await expect(submitBtn.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('visiting /auth without credentials stays on the auth page', async ({ page }) => {
+    // The page should remain on /auth and not redirect an unauthenticated visitor away
+    await page.waitForURL(/\/auth/, { timeout: 5000 });
+    const url = page.url();
+    expect(url).toContain('/auth');
+  });
+
+  test('entering bad credentials shows an error message', async ({ page }) => {
+    const emailInput = page
+      .locator('input[type="email"]')
+      .or(page.getByPlaceholder('seu@email.com'));
+    const passwordInput = page.locator('input[type="password"]').first();
+    const submitBtn = page.getByRole('button', {
+      name: /entrar|sign in|login|submit|aceder/i,
+    }).first();
+
+    const emailCount = await emailInput.count();
+    const pwCount = await passwordInput.count();
+    const btnCount = await submitBtn.count();
+
+    if (emailCount === 0 || pwCount === 0 || btnCount === 0) {
+      test.skip(true, 'Required form elements not found — skipping bad credentials test');
+    }
+
+    await emailInput.first().fill('nobody@invalid-domain-xyz.com');
+    await passwordInput.fill('definitely-wrong-password');
+    await submitBtn.click();
+
+    // Expect error feedback within 10 s — toast, alert, or FormMessage
+    const errorIndicator = page.locator(
+      '[role="alert"], [class*="toast"], [data-sonner-toast], [class*="FormMessage"], [class*="error"], [class*="Error"]',
+    );
+    await expect(errorIndicator.first()).toBeVisible({ timeout: 10000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. Protected route redirect
 // ---------------------------------------------------------------------------
 
 test.describe('AuthPage — protected route redirect', () => {

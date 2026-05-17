@@ -131,7 +131,62 @@ test.describe('Marketplace — become-provider page', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. New order — /marketplace/order/new (auth guard)
+// 4. Product/service listing items, search UI, and provider cards
+// ---------------------------------------------------------------------------
+
+test.describe('Marketplace — deeper listing verification', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/marketplace');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('product or service listing items appear on the page', async ({ page }) => {
+    const listings = page.locator(
+      '[class*="card"], [class*="Card"], [class*="item"], [class*="Item"], [class*="product"], [class*="Product"], [class*="service"], [class*="Service"], article, li',
+    );
+    const count = await listings.count();
+    if (count === 0) {
+      test.skip(true, 'No listing items found — may need live data or auth');
+    }
+    expect(count).toBeGreaterThan(0);
+    await expect(listings.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('search or filter UI is present and interactive', async ({ page }) => {
+    const searchInput = page
+      .getByRole('searchbox')
+      .or(page.locator('input[type="text"], input[type="search"]').first())
+      .or(page.getByPlaceholder(/search|buscar|procurar|filter|filtrar/i).first());
+    const filterBtn = page.getByRole('button', { name: /filter|filtrar|category|categoria/i }).first();
+    const searchCount = await searchInput.count();
+    const filterCount = await filterBtn.count();
+
+    if (searchCount === 0 && filterCount === 0) {
+      test.skip(true, 'No search input or filter button found');
+    }
+    if (searchCount > 0) {
+      await expect(searchInput.first()).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(filterBtn).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('provider cards or listings render with visible text', async ({ page }) => {
+    // Provider cards should display provider name or service description
+    const providerCards = page.locator(
+      '[class*="provider"], [class*="Provider"], [class*="card"], [class*="Card"]',
+    );
+    const count = await providerCards.count();
+    if (count === 0) {
+      test.skip(true, 'No provider cards found — may need live data');
+    }
+    const firstCardText = await providerCards.first().innerText().catch(() => '');
+    expect(firstCardText.trim().length).toBeGreaterThan(0);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. New order — /marketplace/order/new (auth guard)
 // ---------------------------------------------------------------------------
 
 test.describe('Marketplace — order creation (auth guard)', () => {

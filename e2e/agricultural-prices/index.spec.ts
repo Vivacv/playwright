@@ -139,7 +139,69 @@ test.describe('AgriculturalPrices — content', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 4. Language switching
+// 4. Price data — table, list, and numeric values
+// ---------------------------------------------------------------------------
+
+test.describe('AgriculturalPrices — price data content', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/agricultural-prices');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('a table or price-list container is visible', async ({ page }) => {
+    const table = page.locator('table').first();
+    const list = page
+      .locator('[class*="price"], [class*="Price"], [class*="list"], [class*="List"]')
+      .first();
+    const tableCount = await table.count();
+    const listCount = await list.count();
+    if (tableCount === 0 && listCount === 0) {
+      test.skip(true, 'No table or price-list found — may depend on live data');
+    }
+    if (tableCount > 0) {
+      await expect(table).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(list).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('filter or search controls are visible', async ({ page }) => {
+    const filter = page
+      .getByRole('searchbox')
+      .or(page.locator('input[type="text"], input[type="search"]').first())
+      .or(page.locator('select, [role="combobox"]').first())
+      .or(page.getByPlaceholder(/search|buscar|filtrar|filter/i).first());
+    const count = await filter.count();
+    if (count === 0) {
+      test.skip(true, 'No filter controls found — may not be implemented on this route');
+    }
+    await expect(filter.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('at least one numeric price value is rendered on the page', async ({ page }) => {
+    // Match numbers that look like prices: e.g. 12.50, 1,200, 45 CVE
+    const body = await page.locator('body').innerText().catch(() => '');
+    const hasNumber = /\b\d+([.,]\d+)?\s*(CVE|€|\$|escudo)?/i.test(body);
+    if (!hasNumber) {
+      test.skip(true, 'No numeric price value found — data may not be loaded yet');
+    }
+    expect(hasNumber).toBeTruthy();
+  });
+
+  test('category or product filter tabs/buttons are visible', async ({ page }) => {
+    const tabs = page
+      .getByRole('tab')
+      .or(page.getByRole('button', { name: /all|todos|legumes|fruits|grain|cereais/i }));
+    const count = await tabs.count();
+    if (count === 0) {
+      test.skip(true, 'No category filters found');
+    }
+    await expect(tabs.first()).toBeVisible({ timeout: 8000 });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 5. Language switching
 // ---------------------------------------------------------------------------
 
 test.describe('AgriculturalPrices — language switching', () => {

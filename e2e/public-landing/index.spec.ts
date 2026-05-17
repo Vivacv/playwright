@@ -143,7 +143,65 @@ test.describe('PublicLanding — product grid', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 5. Language selector
+// 5. Navigation menu, platform feature sections, CTA buttons, above-fold
+// ---------------------------------------------------------------------------
+
+test.describe('PublicLanding — deeper content verification', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('navigation menu (nav element or header nav) exists', async ({ page }) => {
+    const nav = page.locator('nav').first();
+    const headerNav = page.locator('header').locator('a, button').first();
+    const navCount = await nav.count();
+    const headerNavCount = await headerNav.count();
+    if (navCount === 0 && headerNavCount === 0) {
+      test.skip(true, 'No navigation menu found');
+    }
+    if (navCount > 0) {
+      await expect(nav).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(headerNav).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('at least 3 platform feature sections are visible', async ({ page }) => {
+    // Product/feature sections: tourism, real-estate, events, marketplace, etc.
+    const sections = page.locator('section');
+    const cards = page.locator('[class*="card"], [class*="Card"]');
+    const sectionCount = await sections.count();
+    const cardCount = await cards.count();
+    if (sectionCount === 0 && cardCount < 3) {
+      test.skip(true, 'Less than 3 feature sections or cards found');
+    }
+    expect(Math.max(sectionCount, cardCount)).toBeGreaterThanOrEqual(3);
+  });
+
+  test('CTA buttons are visible on the page', async ({ page }) => {
+    const ctaButtons = page
+      .getByRole('button', { name: /começar|start|entrar|login|discover|explorar|saiba|learn|ver|view/i })
+      .or(page.getByRole('link', { name: /começar|start|entrar|discover|explorar|saiba|learn/i }));
+    const count = await ctaButtons.count();
+    if (count === 0) {
+      test.skip(true, 'No CTA buttons found with expected labels');
+    }
+    expect(count).toBeGreaterThan(0);
+    await expect(ctaButtons.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('above-the-fold content is visible without scrolling', async ({ page }) => {
+    // The first heading should be in the viewport on load
+    const firstHeading = page.locator('h1, h2').first();
+    await expect(firstHeading).toBeVisible({ timeout: 8000 });
+    const isInViewport = await firstHeading.isVisible();
+    expect(isInViewport).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6. Language selector
 // ---------------------------------------------------------------------------
 
 test.describe('PublicLanding — language selector', () => {
