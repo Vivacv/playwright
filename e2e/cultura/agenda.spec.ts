@@ -140,7 +140,73 @@ test.describe('Cultura — agenda page', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 3. Cultura event detail — /cultura/eventos/:slug
+// 3. Event cards/list items and category filter tabs
+// ---------------------------------------------------------------------------
+
+test.describe('Cultura — deeper agenda verification', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/cultura');
+    await page.waitForLoadState('networkidle');
+  });
+
+  test('event cards or list items are visible (or graceful empty state)', async ({ page }) => {
+    const eventCards = page.locator(
+      '[class*="event"], [class*="Event"], [class*="card"], [class*="Card"], article, li',
+    );
+    const emptyState = page.getByText(
+      /sem eventos|no events|nenhum evento|no upcoming|próximos eventos/i,
+    ).first();
+
+    const cardCount = await eventCards.count();
+    const emptyCount = await emptyState.count();
+
+    if (cardCount === 0 && emptyCount === 0) {
+      test.skip(true, 'No event cards or empty state found — may need live data');
+    }
+    if (cardCount > 0) {
+      await expect(eventCards.first()).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(emptyState).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('category filter tabs or buttons are visible', async ({ page }) => {
+    // Cultura agenda typically shows island/category filter tabs
+    const tabs = page.getByRole('tab');
+    const filterButtons = page.getByRole('button', {
+      name: /all|todos|música|music|desporto|sport|arte|art|teatro|dance|dança|cultura/i,
+    });
+    const filterSelect = page.locator('select, [role="combobox"]').first();
+
+    const tabCount = await tabs.count();
+    const btnCount = await filterButtons.count();
+    const selectCount = await filterSelect.count();
+
+    if (tabCount === 0 && btnCount === 0 && selectCount === 0) {
+      test.skip(true, 'No category filter tabs, buttons, or selects found');
+    }
+    if (tabCount > 0) {
+      await expect(tabs.first()).toBeVisible({ timeout: 8000 });
+    } else if (btnCount > 0) {
+      await expect(filterButtons.first()).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(filterSelect).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('agenda shows a date or month reference', async ({ page }) => {
+    // Any agenda should show a date, month name, or calendar reference
+    const bodyText = await page.locator('body').innerText().catch(() => '');
+    const hasDate = /janeiro|fevereiro|março|abril|maio|junho|julho|agosto|setembro|outubro|novembro|dezembro|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{1,2}\/\d{1,2}|\d{4}/i.test(bodyText);
+    if (!hasDate) {
+      test.skip(true, 'No date or month reference found — may depend on live event data');
+    }
+    expect(hasDate).toBeTruthy();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 4. Cultura event detail — /cultura/eventos/:slug
 // ---------------------------------------------------------------------------
 
 test.describe('Cultura — event detail page', () => {

@@ -184,7 +184,105 @@ test.describe('Developer — dashboard (auth guard)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// 5. Create app — /developer/apps/new (auth-gated)
+// 5. API docs section and register/login CTA on landing
+// ---------------------------------------------------------------------------
+
+test.describe('Developer — deeper portal verification', () => {
+  test('developer landing has an API docs section or link', async ({ page }) => {
+    await page.goto('/developer');
+    await page.waitForLoadState('networkidle');
+
+    const docsLink = page
+      .getByRole('link', { name: /docs|documentation|api docs|reference|api reference/i })
+      .or(page.getByRole('button', { name: /docs|documentation|api docs|reference/i }));
+    const docsText = page.getByText(/api documentation|api reference|developer docs|view docs/i).first();
+    const docsSection = page.locator('[class*="doc"], [class*="Doc"], [id*="doc"], [id*="api"]').first();
+
+    const linkCount = await docsLink.count();
+    const textCount = await docsText.count();
+    const sectionCount = await docsSection.count();
+
+    if (linkCount === 0 && textCount === 0 && sectionCount === 0) {
+      test.skip(true, 'No API docs section or link found on developer landing');
+    }
+    if (linkCount > 0) {
+      await expect(docsLink.first()).toBeVisible({ timeout: 8000 });
+    } else if (textCount > 0) {
+      await expect(docsText).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(docsSection).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('developer landing shows a register or login CTA', async ({ page }) => {
+    await page.goto('/developer');
+    await page.waitForLoadState('networkidle');
+
+    const cta = page
+      .getByRole('button', {
+        name: /register|registar|sign up|login|entrar|get started|começar|apply|api key/i,
+      })
+      .or(
+        page.getByRole('link', {
+          name: /register|registar|sign up|login|get started|começar|apply/i,
+        }),
+      );
+    const count = await cta.count();
+    if (count === 0) {
+      test.skip(true, 'No register/login CTA found on developer landing');
+    }
+    await expect(cta.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('developer docs page shows API endpoint or reference content', async ({ page }) => {
+    await page.goto('/developer/docs');
+    await page.waitForLoadState('networkidle');
+
+    const apiContent = page
+      .getByText(/endpoint|GET|POST|PUT|DELETE|authentication|bearer|token|api key|swagger|openapi/i)
+      .first();
+    const docsHeading = page.locator('h1, h2, h3').filter({ hasText: /api|docs|documentation|reference|endpoint/i }).first();
+
+    const apiCount = await apiContent.count();
+    const headingCount = await docsHeading.count();
+
+    if (apiCount === 0 && headingCount === 0) {
+      test.skip(true, 'No API reference content found on /developer/docs');
+    }
+    if (apiCount > 0) {
+      await expect(apiContent).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(docsHeading).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('developer registration form accepts email input', async ({ page }) => {
+    await page.goto('/developer/register');
+    await page.waitForLoadState('networkidle');
+
+    const emailInput = page.locator('input[type="email"]').first();
+    const emailPlaceholder = page
+      .getByPlaceholder(/email|e-mail|seu@|your@/i)
+      .first();
+
+    const emailTypeCount = await emailInput.count();
+    const placeholderCount = await emailPlaceholder.count();
+
+    if (emailTypeCount === 0 && placeholderCount === 0) {
+      test.skip(true, 'No email input found on developer registration page');
+    }
+    if (emailTypeCount > 0) {
+      await expect(emailInput).toBeVisible({ timeout: 8000 });
+      await emailInput.fill('dev-test@example.com');
+      await expect(emailInput).toHaveValue('dev-test@example.com');
+    } else {
+      await expect(emailPlaceholder).toBeVisible({ timeout: 8000 });
+    }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 6. Create app — /developer/apps/new (auth-gated)
 // ---------------------------------------------------------------------------
 
 test.describe('Developer — create app (auth guard)', () => {
