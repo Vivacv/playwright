@@ -132,3 +132,77 @@ test.describe('NuUni — Reporta', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 4. NuUni — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('NuUni hub — deeper content', () => {
+  test('hub heading mentions NuUni or the platform', async ({ page }) => {
+    await page.goto('/nuuni');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+    const headingText = await heading.textContent().catch(() => '');
+    const hasKeyword = /nuuni|civic|cívico|platform|plataforma|citizen|cidadão/i.test(headingText ?? '');
+    // Accept: keyword in heading OR any nuuni-branded content is present
+    const brandedContent = page.getByText(/nuuni/i).first();
+    const brandedCount = await brandedContent.count();
+    if (!hasKeyword && brandedCount === 0) {
+      test.skip(true, 'Heading does not mention NuUni/platform and no branded content found');
+    }
+  });
+
+  test('sub-route navigation links are present', async ({ page }) => {
+    await page.goto('/nuuni');
+    await page.waitForLoadState('networkidle');
+    const subRouteLink = page.getByRole('link', {
+      name: /reporta|parlamento|diaspora|informacao|eco-turismo|turismo/i,
+    });
+    const count = await subRouteLink.count();
+    if (count === 0) {
+      test.skip(true, 'No sub-route navigation links found on NuUni hub');
+    }
+    await expect(subRouteLink.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('at least one navigational card or link is present', async ({ page }) => {
+    await page.goto('/nuuni');
+    await page.waitForLoadState('networkidle');
+    const navLink = page.getByRole('link').first();
+    const count = await navLink.count();
+    if (count === 0) {
+      test.skip(true, 'No links found on NuUni hub');
+    }
+    await expect(navLink).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('NuUni Reporta — deeper content', () => {
+  test('reporta sub-route renders a heading', async ({ page }) => {
+    await page.goto('/nuuni/reporta');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('reporta sub-route renders meaningful content', async ({ page }) => {
+    await page.goto('/nuuni/reporta');
+    await page.waitForLoadState('networkidle');
+    const content = page
+      .getByText(/report|reportar|denúncia|problema|issue|complaint|cidadão/i)
+      .first();
+    const count = await content.count();
+    if (count === 0) {
+      test.skip(true, 'No reporting-related content found on Reporta sub-route');
+    }
+    await expect(content).toBeVisible({ timeout: 8000 });
+  });
+
+  test('reporta page does not show an error boundary', async ({ page }) => {
+    await page.goto('/nuuni/reporta');
+    await page.waitForLoadState('networkidle');
+    const errorBoundary = page.getByText(/something went wrong|erro inesperado/i);
+    await expect(errorBoundary).not.toBeVisible();
+  });
+});

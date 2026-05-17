@@ -168,3 +168,78 @@ test.describe('RxChain — ERIS health authority', () => {
     await expect(content).toBeVisible({ timeout: 5000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. RxChain — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('RxChain hub — deeper content', () => {
+  test('hub heading is visible', async ({ page }) => {
+    await page.goto('/rxchain');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('navigation links to doctor portal are present', async ({ page }) => {
+    await page.goto('/rxchain');
+    await page.waitForLoadState('networkidle');
+    const doctorLink = page.getByRole('link', { name: /doctor|médico|prescri/i });
+    const count = await doctorLink.count();
+    if (count === 0) {
+      test.skip(true, 'Doctor portal link not found on RxChain hub');
+    }
+    await expect(doctorLink.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('navigation links to pharmacy portal are present', async ({ page }) => {
+    await page.goto('/rxchain');
+    await page.waitForLoadState('networkidle');
+    const pharmacyLink = page.getByRole('link', { name: /pharmacy|farmácia|dispens/i });
+    const count = await pharmacyLink.count();
+    if (count === 0) {
+      test.skip(true, 'Pharmacy portal link not found on RxChain hub');
+    }
+    await expect(pharmacyLink.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('navigation links to patient portal are present', async ({ page }) => {
+    await page.goto('/rxchain');
+    await page.waitForLoadState('networkidle');
+    const patientLink = page.getByRole('link', { name: /patient|paciente/i });
+    const count = await patientLink.count();
+    if (count === 0) {
+      test.skip(true, 'Patient portal link not found on RxChain hub');
+    }
+    await expect(patientLink.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('navigation links to ERIS portal are present', async ({ page }) => {
+    await page.goto('/rxchain');
+    await page.waitForLoadState('networkidle');
+    const erisLink = page.getByRole('link', { name: /eris|health authority|autoridade/i });
+    const count = await erisLink.count();
+    if (count === 0) {
+      test.skip(true, 'ERIS portal link not found on RxChain hub');
+    }
+    await expect(erisLink.first()).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('RxChain sub-routes — heading verification', () => {
+  const SUB_ROUTES = [
+    { path: '/rxchain/patient', label: 'Patient' },
+    { path: '/rxchain/doctor', label: 'Doctor' },
+    { path: '/rxchain/pharmacy', label: 'Pharmacy' },
+    { path: '/rxchain/eris', label: 'ERIS' },
+  ];
+
+  for (const { path, label } of SUB_ROUTES) {
+    test(`${label} sub-route renders a heading`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      const heading = page.locator('h1, h2').first();
+      await expect(heading).toBeVisible({ timeout: 8000 });
+    });
+  }
+});

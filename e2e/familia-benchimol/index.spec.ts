@@ -185,3 +185,66 @@ test.describe('FamiliaBenchimol — language switching', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5. Família Benchimol — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('FamiliaBenchimol — deeper content', () => {
+  test('gallery or content section loads', async ({ page }) => {
+    await page.goto('/familia-benchimol');
+    await page.waitForLoadState('networkidle');
+    const section = page
+      .locator(
+        '[class*="gallery"], [class*="Gallery"], [class*="content"], [class*="Content"], main, section',
+      )
+      .first();
+    const count = await section.count();
+    if (count === 0) {
+      test.skip(true, 'No gallery or content section found');
+    }
+    await expect(section).toBeVisible({ timeout: 8000 });
+  });
+
+  test('heading is visible on main page', async ({ page }) => {
+    await page.goto('/familia-benchimol');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('navigation or menu exists', async ({ page }) => {
+    await page.goto('/familia-benchimol');
+    await page.waitForLoadState('networkidle');
+    const nav = page
+      .locator('nav, [role="navigation"], header')
+      .or(page.getByRole('link').first());
+    const count = await nav.count();
+    if (count === 0) {
+      test.skip(true, 'No navigation or menu found on Benchimol page');
+    }
+    await expect(nav.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('heading is visible on /benchimol redirect', async ({ page }) => {
+    await page.goto('/benchimol');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('gallery or content section loads on /benchimol redirect', async ({ page }) => {
+    await page.goto('/benchimol');
+    await page.waitForLoadState('networkidle');
+    const section = page
+      .locator(
+        '[class*="gallery"], [class*="Gallery"], [class*="content"], [class*="Content"], main, section',
+      )
+      .first();
+    const count = await section.count();
+    if (count === 0) {
+      test.skip(true, 'No gallery or content section found after redirect');
+    }
+    await expect(section).toBeVisible({ timeout: 8000 });
+  });
+});

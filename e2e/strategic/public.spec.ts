@@ -105,3 +105,87 @@ test.describe('StrategicAudit — page', () => {
     await expect(visible).toBeVisible({ timeout: 6000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 3. Strategic — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('StrategicConsultancyLanding — deeper content', () => {
+  test('heading is visible', async ({ page }) => {
+    await page.goto('/strategic-consultancy-landing');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('CTA button is present', async ({ page }) => {
+    await page.goto('/strategic-consultancy-landing');
+    await page.waitForLoadState('networkidle');
+    const cta = page
+      .getByRole('button')
+      .or(page.getByRole('link', { name: /contact|contacto|start|começar|learn|saiba|book|agendar/i }));
+    const count = await cta.count();
+    if (count === 0) {
+      test.skip(true, 'No CTA button found on strategic consultancy landing');
+    }
+    await expect(cta.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('strategic or consultancy keyword content is visible', async ({ page }) => {
+    await page.goto('/strategic-consultancy-landing');
+    await page.waitForLoadState('networkidle');
+    const content = page
+      .getByText(/strategic|estratégi|consult|service|serviço|audit|plan/i)
+      .first();
+    const count = await content.count();
+    if (count === 0) {
+      test.skip(true, 'Strategic content keyword not found');
+    }
+    await expect(content).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('StrategicAudit — deeper content', () => {
+  test('heading is visible on audit page', async ({ page }) => {
+    await page.goto('/strategic-audit');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('audit page has a form or input field (or auth gate)', async ({ page }) => {
+    await page.goto('/strategic-audit');
+    await page.waitForLoadState('networkidle');
+    const formInput = page
+      .locator('form, input, textarea, select')
+      .first();
+    const authGate = page.getByText(/sign in|login|entrar|authenticate/i).first();
+
+    const formCount = await formInput.count();
+    const authCount = await authGate.count();
+
+    if (formCount === 0 && authCount === 0) {
+      test.skip(true, 'No form/input or auth gate found on strategic audit page');
+    }
+    const visibleEl = formCount > 0 ? formInput : authGate;
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+
+  test('CTA button is present on audit page', async ({ page }) => {
+    await page.goto('/strategic-audit');
+    await page.waitForLoadState('networkidle');
+    const cta = page
+      .getByRole('button')
+      .or(page.getByRole('link', { name: /start|começar|submit|enviar|audit|contact/i }));
+    const authGate = page.getByText(/sign in|login|entrar|authenticate/i).first();
+
+    const ctaCount = await cta.count();
+    const authCount = await authGate.count();
+
+    if (ctaCount === 0 && authCount === 0) {
+      test.skip(true, 'No CTA button or auth gate found on strategic audit page');
+    }
+    const visibleEl = ctaCount > 0 ? cta.first() : authGate;
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+});

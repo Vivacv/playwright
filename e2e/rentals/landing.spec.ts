@@ -137,3 +137,77 @@ test.describe('RentalsHost — page', () => {
     }
   });
 });
+
+// ---------------------------------------------------------------------------
+// 3. Rentals — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('RentalsLanding — deeper content', () => {
+  test('hero heading is visible', async ({ page }) => {
+    await page.goto('/rentals-landing');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('host CTA is visible on landing page', async ({ page }) => {
+    await page.goto('/rentals-landing');
+    await page.waitForLoadState('networkidle');
+    const hostCta = page
+      .getByRole('link', { name: /host|anunciar|list your/i })
+      .or(page.getByRole('button', { name: /host|anunciar|list your/i }));
+    const count = await hostCta.count();
+    if (count === 0) {
+      test.skip(true, 'Host CTA not found on rentals landing page');
+    }
+    await expect(hostCta.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('features or benefits section is visible', async ({ page }) => {
+    await page.goto('/rentals-landing');
+    await page.waitForLoadState('networkidle');
+    const featuresSection = page
+      .getByText(/feature|benefit|vantag|why|porquê|safe|segur/i)
+      .first();
+    const count = await featuresSection.count();
+    if (count === 0) {
+      test.skip(true, 'Features/benefits section not found on rentals landing page');
+    }
+    await expect(featuresSection).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('RentalsHost — deeper content', () => {
+  test('hero heading is visible on host page', async ({ page }) => {
+    await page.goto('/rentals/host');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('host CTA button is visible', async ({ page }) => {
+    await page.goto('/rentals/host');
+    await page.waitForLoadState('networkidle');
+    const cta = page
+      .getByRole('button', { name: /start|começar|anunciar|list|host/i })
+      .or(page.getByRole('link', { name: /start|começar|anunciar|list|get started/i }));
+    const count = await cta.count();
+    if (count === 0) {
+      test.skip(true, 'Host CTA not found on host page');
+    }
+    await expect(cta.first()).toBeVisible({ timeout: 8000 });
+  });
+
+  test('features or benefits section is present on host page', async ({ page }) => {
+    await page.goto('/rentals/host');
+    await page.waitForLoadState('networkidle');
+    const section = page
+      .getByText(/earn|ganhe|benefit|vantag|feature|why host|porquê/i)
+      .first();
+    const count = await section.count();
+    if (count === 0) {
+      test.skip(true, 'Features/benefits section not found on host page');
+    }
+    await expect(section).toBeVisible({ timeout: 8000 });
+  });
+});

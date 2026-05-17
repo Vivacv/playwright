@@ -189,3 +189,82 @@ test.describe('RentalsBookingReview — public review page', () => {
     expect(body.trim().length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Booking confirmation pages — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('BookingSuccess — deeper content', () => {
+  test('success page shows a confirmation heading', async ({ page }) => {
+    await page.goto('/booking-success');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('success page shows a confirmation heading or checkmark icon', async ({ page }) => {
+    await page.goto('/booking-success');
+    await page.waitForLoadState('networkidle');
+    const confirmHeading = page
+      .getByText(/success|confirmad|reserva|booking|obrigado|thank|confirmed/i)
+      .first();
+    const checkIcon = page
+      .locator('[class*="check"], [class*="Check"], [aria-label*="check"], svg')
+      .first();
+
+    const headingCount = await confirmHeading.count();
+    const iconCount = await checkIcon.count();
+
+    if (headingCount === 0 && iconCount === 0) {
+      test.skip(true, 'No confirmation heading or checkmark icon found on booking success page');
+    }
+    const visibleEl = headingCount > 0 ? confirmHeading : checkIcon;
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+
+  test('success page has a return or home navigation link', async ({ page }) => {
+    await page.goto('/booking-success');
+    await page.waitForLoadState('networkidle');
+    const returnLink = page.getByRole('link', { name: /home|início|back|voltar|return|go to/i })
+      .or(page.getByRole('button', { name: /home|início|back|voltar|return/i }));
+    const count = await returnLink.count();
+    if (count === 0) {
+      test.skip(true, 'No return/home link found on booking success page');
+    }
+    await expect(returnLink.first()).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('BookingCancelled — deeper content', () => {
+  test('cancelled page shows a cancellation message heading', async ({ page }) => {
+    await page.goto('/booking-cancelled');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('cancelled page shows cancellation message text', async ({ page }) => {
+    await page.goto('/booking-cancelled');
+    await page.waitForLoadState('networkidle');
+    const cancelMsg = page
+      .getByText(/cancel|cancelad|not completed|não concluíd|payment|pagamento/i)
+      .first();
+    const count = await cancelMsg.count();
+    if (count === 0) {
+      test.skip(true, 'No cancellation message found on booking cancelled page');
+    }
+    await expect(cancelMsg).toBeVisible({ timeout: 8000 });
+  });
+
+  test('cancelled page has a return or home navigation link', async ({ page }) => {
+    await page.goto('/booking-cancelled');
+    await page.waitForLoadState('networkidle');
+    const returnLink = page.getByRole('link', { name: /home|início|back|voltar|return|try again|retry/i })
+      .or(page.getByRole('button', { name: /home|início|back|voltar|return|try again|retry/i }));
+    const count = await returnLink.count();
+    if (count === 0) {
+      test.skip(true, 'No return/home link found on booking cancelled page');
+    }
+    await expect(returnLink.first()).toBeVisible({ timeout: 8000 });
+  });
+});

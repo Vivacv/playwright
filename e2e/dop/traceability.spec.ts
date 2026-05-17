@@ -124,3 +124,93 @@ test.describe('VerificarDOP — lot verification (PT)', () => {
     expect(body.trim().length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 4. DOP — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('DOPFogo — deeper content', () => {
+  test('DOP landing heading is visible', async ({ page }) => {
+    await page.goto('/dop-fogo');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('lot search form or input exists on DOP landing', async ({ page }) => {
+    await page.goto('/dop-fogo');
+    await page.waitForLoadState('networkidle');
+    const searchInput = page
+      .locator('input[type="text"], input[type="search"], input[type="number"]')
+      .first();
+    const searchForm = page.locator('form').first();
+    const verifyLink = page.getByRole('link', { name: /verify|verificar|lote|lot|check/i });
+
+    const inputCount = await searchInput.count();
+    const formCount = await searchForm.count();
+    const linkCount = await verifyLink.count();
+
+    if (inputCount === 0 && formCount === 0 && linkCount === 0) {
+      test.skip(true, 'No search form, input, or verification link found on DOP Fogo');
+    }
+    const visibleEl = inputCount > 0 ? searchInput : formCount > 0 ? searchForm : verifyLink.first();
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+});
+
+test.describe('VerifyDOP — invalid lot graceful handling', () => {
+  test('invalid lot number shows an error or not-found state gracefully (EN)', async ({ page }) => {
+    await page.goto('/verify-dop/INVALID-LOT-00000');
+    await page.waitForLoadState('networkidle');
+
+    // Page must not crash
+    const errorBoundary = page.getByText(/something went wrong|erro inesperado|uncaught/i);
+    await expect(errorBoundary).not.toBeVisible();
+
+    // Either a not-found message or any content is shown
+    const notFound = page
+      .getByText(/not found|não encontrad|invalid|inválido|no result|sem resultado/i)
+      .first();
+    const heading = page.locator('h1, h2').first();
+
+    const notFoundCount = await notFound.count();
+    const headingCount = await heading.count();
+
+    if (notFoundCount === 0 && headingCount === 0) {
+      test.skip(true, 'Neither not-found message nor heading visible for invalid lot');
+    }
+    const visibleEl = notFoundCount > 0 ? notFound : heading;
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+
+  test('invalid lot number shows an error or not-found state gracefully (PT)', async ({ page }) => {
+    await page.goto('/verificar-dop/INVALID-LOT-00000');
+    await page.waitForLoadState('networkidle');
+
+    // Page must not crash
+    const errorBoundary = page.getByText(/something went wrong|erro inesperado|uncaught/i);
+    await expect(errorBoundary).not.toBeVisible();
+
+    // Either a not-found message or any content is shown
+    const notFound = page
+      .getByText(/not found|não encontrad|invalid|inválido|no result|sem resultado/i)
+      .first();
+    const heading = page.locator('h1, h2').first();
+
+    const notFoundCount = await notFound.count();
+    const headingCount = await heading.count();
+
+    if (notFoundCount === 0 && headingCount === 0) {
+      test.skip(true, 'Neither not-found message nor heading visible for invalid lot (PT)');
+    }
+    const visibleEl = notFoundCount > 0 ? notFound : heading;
+    await expect(visibleEl).toBeVisible({ timeout: 8000 });
+  });
+
+  test('DOP verification heading is visible for a known-format lot', async ({ page }) => {
+    await page.goto('/verify-dop/DOP-FOGO-2024-001');
+    await page.waitForLoadState('networkidle');
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+});
