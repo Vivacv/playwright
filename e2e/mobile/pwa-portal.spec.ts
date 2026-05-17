@@ -213,3 +213,38 @@ test.describe('Mobile — page title checks', () => {
     });
   }
 });
+
+// ---------------------------------------------------------------------------
+// 6. Mobile — body content checks
+// ---------------------------------------------------------------------------
+
+test.describe('Mobile — body content checks', () => {
+  test('/mobile/home body has substantial content', async ({ page }) => {
+    await page.goto('/mobile/home');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(50);
+  });
+
+  test('/mobile/media-academy body is non-empty', async ({ page }) => {
+    await page.goto('/mobile/media-academy');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length, 'Empty body on /mobile/media-academy').toBeGreaterThan(0);
+  });
+
+  test('/mobile/home has no JS errors', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto('/mobile/home');
+    await page.waitForLoadState('networkidle');
+
+    const appErrors = errors.filter(
+      (e) => !e.includes('ResizeObserver') && !e.includes('Non-Error'),
+    );
+    expect(appErrors).toHaveLength(0);
+  });
+});

@@ -112,4 +112,43 @@ test.describe('Suite — auth gate content checks', () => {
     const body = await page.locator('body').innerText().catch(() => '');
     expect(body.trim().length).toBeGreaterThan(0);
   });
+
+  test('/suite body has substantial content', async ({ page }) => {
+    await page.goto('/suite');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(50);
+  });
+
+  test('/suite/marketplace/orders responds without crash', async ({ page }) => {
+    await page.goto('/suite/marketplace/orders');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length, 'Empty body on /suite/marketplace/orders').toBeGreaterThan(0);
+
+    const errorBoundary = page.getByText(/something went wrong|erro inesperado|uncaught/i);
+    await expect(errorBoundary).not.toBeVisible();
+  });
+
+  test('/suite/marketplace title is non-empty', async ({ page }) => {
+    await page.goto('/suite/marketplace');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.length).toBeGreaterThan(0);
+  });
+
+  test('/suite/marketplace/become-provider body is non-empty', async ({ page }) => {
+    await page.goto('/suite/marketplace/become-provider');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/suite/marketplace/order/new responds without crash', async ({ page }) => {
+    await page.goto('/suite/marketplace/order/new');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+  });
 });
