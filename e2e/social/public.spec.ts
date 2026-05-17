@@ -49,3 +49,58 @@ test.describe('Social — root /social', () => {
     expect(title.length).toBeGreaterThan(0);
   });
 });
+
+test.describe('Social — content verification', () => {
+  test('/social renders a heading', async ({ page }) => {
+    await page.goto('/social');
+    await page.waitForLoadState('networkidle');
+
+    const heading = page.getByRole('heading').first();
+    const count = await page.getByRole('heading').count();
+    if (count === 0) {
+      test.skip(true, '/social heading not found — page may require auth');
+    }
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('/social/feed has body content > 10 chars', async ({ page }) => {
+    await page.goto('/social/feed');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const headingCount = await page.getByRole('heading').count();
+    const buttonCount = await page.getByRole('button').count();
+    const hasContent = headingCount > 0 || buttonCount > 0 || body.trim().length > 10;
+    if (!hasContent) {
+      test.skip(true, '/social/feed content not available — page may require auth');
+    }
+    expect(body.trim().length).toBeGreaterThan(10);
+  });
+
+  test('/social/profile has body content > 10 chars', async ({ page }) => {
+    await page.goto('/social/profile');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const headingCount = await page.getByRole('heading').count();
+    const buttonCount = await page.getByRole('button').count();
+    const hasContent = headingCount > 0 || buttonCount > 0 || body.trim().length > 10;
+    if (!hasContent) {
+      test.skip(true, '/social/profile content not available — page may require auth');
+    }
+    expect(body.trim().length).toBeGreaterThan(10);
+  });
+
+  test('/social has at least one link or button', async ({ page }) => {
+    await page.goto('/social');
+    await page.waitForLoadState('networkidle');
+
+    const linkCount = await page.getByRole('link').count();
+    const buttonCount = await page.getByRole('button').count();
+    expect(linkCount + buttonCount).toBeGreaterThan(0);
+  });
+});

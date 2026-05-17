@@ -46,3 +46,29 @@ test.describe('Fleet — /fleet-landing', () => {
     await expect(errorBoundary).not.toBeVisible();
   });
 });
+
+test.describe('Fleet — /fleet-landing deeper content', () => {
+  test('CTA button or link is visible', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const cta = page.locator('button, a[href]').first();
+    await expect(cta).toBeVisible({ timeout: 8000 });
+  });
+
+  test('page body contains fleet-related content', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body).toMatch(/fleet|frota|veículo|vehicle/i);
+  });
+
+  test('at least one image or icon is present', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const count = await page.locator('img, svg').count();
+    expect(count).toBeGreaterThan(0);
+  });
+});

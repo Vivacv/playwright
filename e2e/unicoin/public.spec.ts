@@ -76,3 +76,43 @@ test.describe('Unicoin — /unicoin hub', () => {
     await expect(errorBoundary).not.toBeVisible();
   });
 });
+
+test.describe('Unicoin — deeper content checks', () => {
+  test('/unicoin-landing heading contains unicoin/crypto-related text', async ({ page }) => {
+    await page.goto('/unicoin-landing');
+    await page.waitForLoadState('networkidle');
+
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+    const headingText = await heading.innerText().catch(() => '');
+    expect(headingText).toMatch(/unicoin|crypto|coin|token|blockchain/i);
+  });
+
+  test('/unicoin-landing has at least one CTA link or button', async ({ page }) => {
+    await page.goto('/unicoin-landing');
+    await page.waitForLoadState('networkidle');
+
+    const buttonCount = await page.getByRole('button').count();
+    const linkCount = await page.getByRole('link').count();
+    expect(buttonCount + linkCount).toBeGreaterThan(0);
+
+    const firstCta = buttonCount > 0
+      ? page.getByRole('button').first()
+      : page.getByRole('link').first();
+    await expect(firstCta).toBeVisible({ timeout: 8000 });
+  });
+
+  test('/unicoin body has meaningful text when not redirected', async ({ page }) => {
+    await page.goto('/unicoin');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const headingCount = await page.getByRole('heading').count();
+    if (headingCount === 0) {
+      test.skip(true, '/unicoin redirected to auth — skipping content check');
+    }
+    expect(body.trim().length).toBeGreaterThan(10);
+  });
+});

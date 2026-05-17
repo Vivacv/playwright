@@ -53,3 +53,42 @@ test.describe('Water — /water-landing', () => {
     expect(body.trim().length).toBeGreaterThan(10);
   });
 });
+
+test.describe('Water — /water-landing deeper content', () => {
+  test('main heading contains relevant text', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const heading = page.locator('h1, h2').first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+    const headingText = await heading.innerText().catch(() => '');
+    expect(headingText).toMatch(/água|water|gestão|management/i);
+  });
+
+  test('CTA button or contact link is present', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const ctaButton = page.getByRole('button').first();
+    const ctaLink = page.getByRole('link').first();
+
+    const buttonCount = await page.getByRole('button').count();
+    const linkCount = await page.getByRole('link').count();
+    expect(buttonCount + linkCount).toBeGreaterThan(0);
+
+    if (buttonCount > 0) {
+      await expect(ctaButton).toBeVisible({ timeout: 8000 });
+    } else {
+      await expect(ctaLink).toBeVisible({ timeout: 8000 });
+    }
+  });
+
+  test('features or services section loads with multiple paragraphs or cards', async ({ page }) => {
+    await page.goto(URL);
+    await page.waitForLoadState('networkidle');
+
+    const paragraphCount = await page.locator('p').count();
+    const cardCount = await page.locator('[class*="card"], [class*="feature"], [class*="service"], section').count();
+    expect(paragraphCount + cardCount).toBeGreaterThan(1);
+  });
+});
