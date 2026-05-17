@@ -180,3 +180,36 @@ test.describe('CodeEvalPage — refresh', () => {
     await expect(page).toHaveURL(new RegExp(CODE_EVAL_URL));
   });
 });
+
+// ---------------------------------------------------------------------------
+// 4. Page integrity
+// ---------------------------------------------------------------------------
+
+test.describe('CodeEvalPage — page integrity', () => {
+  test('page title is non-empty', async ({ page }) => {
+    await page.goto(CODE_EVAL_URL);
+    await page.waitForLoadState('domcontentloaded');
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing');
+    }
+    const title = await page.title();
+    expect(title.trim().length).toBeGreaterThan(0);
+  });
+
+  test('no JS errors thrown on code-eval page load', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto(CODE_EVAL_URL);
+    await page.waitForLoadState('networkidle');
+
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing');
+    }
+
+    const appErrors = errors.filter(
+      (e) => !e.includes('ResizeObserver') && !e.includes('Non-Error'),
+    );
+    expect(appErrors).toHaveLength(0);
+  });
+});

@@ -223,3 +223,24 @@ test.describe('PropertySearch — filter controls', () => {
     expect(hasKeywords).toBe(true);
   });
 });
+
+// ---------------------------------------------------------------------------
+// 9. Real estate property — content check
+// ---------------------------------------------------------------------------
+
+test.describe('RealEstate — property page content', () => {
+  test('/real-estate/property has non-empty body', async ({ page }) => {
+    await page.goto('/real-estate/property');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/property page title is non-empty', async ({ page }) => {
+    await page.goto('/property');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.trim().length).toBeGreaterThan(0);
+  });
+});

@@ -202,3 +202,48 @@ test.describe('MFE — lazy chunk loading', () => {
     await expect(firstNav).toBeVisible({ timeout: 8000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. MFE — content and title integrity
+// ---------------------------------------------------------------------------
+
+test.describe('MFE — content and title integrity', () => {
+  test('home route title is non-empty', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    const title = await page.title();
+    expect(title.trim().length).toBeGreaterThan(0);
+  });
+
+  test('home route body has substantial content', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(50);
+  });
+
+  test('no JS errors on home route', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const appErrors = errors.filter(
+      (e) => !e.includes('ResizeObserver') && !e.includes('Non-Error'),
+    );
+    expect(appErrors).toHaveLength(0);
+  });
+
+  test('/protected-app/crm domain module body is non-empty after nav', async ({ page }) => {
+    await page.goto('/protected-app/crm');
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
+
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing — crm redirected to auth');
+    }
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+  });
+});

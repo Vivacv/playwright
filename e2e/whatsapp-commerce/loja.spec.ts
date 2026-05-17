@@ -127,4 +127,36 @@ test.describe('Loja — heading and form checks', () => {
     }
     expect(body).toMatch(/demo|demonstração|store|loja/i);
   });
+
+  test('/loja page title is set', async ({ page }) => {
+    await page.goto('/loja');
+    await page.waitForLoadState('networkidle');
+
+    const title = await page.title();
+    expect(title.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/loja body length is substantial', async ({ page }) => {
+    await page.goto('/loja');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(50);
+  });
+
+  test('/loja/tracking responds with non-empty body', async ({ page }) => {
+    await page.goto('/loja/tracking');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length, 'body is empty on /loja/tracking').toBeGreaterThan(0);
+  });
+
+  test('/loja/onboarding responds with non-empty body', async ({ page }) => {
+    await page.goto('/loja/onboarding');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length, 'body is empty on /loja/onboarding').toBeGreaterThan(0);
+  });
 });

@@ -151,3 +151,52 @@ test.describe('AdminDashboard — session', () => {
     expect(page.url()).not.toContain('/login');
   });
 });
+
+// ---------------------------------------------------------------------------
+// 6. Page content checks
+// ---------------------------------------------------------------------------
+
+test.describe('AdminDashboard — content', () => {
+  test('admin page body has substantial content', async ({ page }) => {
+    await page.goto(ADMIN_URL);
+    await page.waitForLoadState('networkidle');
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing');
+    }
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(100);
+  });
+
+  test('admin page title is set', async ({ page }) => {
+    await page.goto(ADMIN_URL);
+    await page.waitForLoadState('networkidle');
+    const title = await page.title();
+    expect(title.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/admin/roles does not show uncaught error', async ({ page }) => {
+    await page.goto('/admin/roles');
+    await page.waitForLoadState('networkidle');
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing');
+    }
+    const errorBoundary = page.getByText(/something went wrong|uncaught error/i);
+    await expect(errorBoundary).not.toBeVisible();
+  });
+
+  test('no JS exceptions thrown on admin route', async ({ page }) => {
+    const errors: string[] = [];
+    page.on('pageerror', (err) => errors.push(err.message));
+
+    await page.goto(ADMIN_URL);
+    await page.waitForLoadState('networkidle');
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing');
+    }
+
+    const appErrors = errors.filter(
+      (e) => !e.includes('ResizeObserver') && !e.includes('Non-Error'),
+    );
+    expect(appErrors).toHaveLength(0);
+  });
+});

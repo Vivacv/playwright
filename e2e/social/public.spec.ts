@@ -137,3 +137,36 @@ test.describe('Social sub-routes — no JS errors', () => {
     expect(title.length).toBeGreaterThan(0);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Social — additional content checks
+// ---------------------------------------------------------------------------
+
+test.describe('Social — body and navigation', () => {
+  test('/social body has substantial content', async ({ page }) => {
+    await page.goto('/social');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(50);
+  });
+
+  test('/social has at least one image or avatar', async ({ page }) => {
+    await page.goto('/social');
+    await page.waitForLoadState('networkidle');
+
+    const images = page.locator('img, svg').first();
+    const count = await page.locator('img, svg').count();
+    if (count === 0) {
+      test.skip(true, '/social has no images — may require auth');
+    }
+    await expect(images).toBeVisible({ timeout: 6000 });
+  });
+
+  test('/social/profile title is non-empty', async ({ page }) => {
+    await page.goto('/social/profile');
+    await page.waitForLoadState('domcontentloaded');
+    const title = await page.title();
+    expect(title.length).toBeGreaterThan(0);
+  });
+});
