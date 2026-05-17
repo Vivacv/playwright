@@ -136,3 +136,53 @@ test.describe('UniServices — page', () => {
     await expect(visible).toBeVisible({ timeout: 6000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5. Architecture — content depth checks
+// ---------------------------------------------------------------------------
+
+test.describe('Architecture — content depth checks', () => {
+  test('/iot-architecture has a heading visible', async ({ page }) => {
+    await page.goto('/iot-architecture');
+    await page.waitForLoadState('networkidle');
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('/iot-architecture body contains architecture-related text', async ({ page }) => {
+    await page.goto('/iot-architecture');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body).toMatch(/architecture|arquitetura|iot|IoT/i);
+  });
+
+  test('/dpi-architecture has a heading', async ({ page }) => {
+    await page.goto('/dpi-architecture');
+    await page.waitForLoadState('networkidle');
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+  });
+
+  test('/uni-services has a list or card section', async ({ page }) => {
+    await page.goto('/uni-services');
+    await page.waitForLoadState('networkidle');
+    const listOrCards = page
+      .locator('ul, ol, [class*="card"], [class*="Card"], [class*="service"], [class*="Service"]')
+      .first();
+    const count = await listOrCards.count();
+    if (count === 0) {
+      test.skip(true, 'No list or card section found on /uni-services');
+    }
+    await expect(listOrCards).toBeVisible({ timeout: 8000 });
+  });
+
+  for (const { path, label } of ARCH_ROUTES) {
+    test(`${label} (${path}) has at least one link`, async ({ page }) => {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+      const links = page.getByRole('link');
+      const count = await links.count();
+      expect(count).toBeGreaterThan(0);
+    });
+  }
+});

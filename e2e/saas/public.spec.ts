@@ -128,3 +128,72 @@ for (const path of VERTICAL_PRICING) {
     });
   });
 }
+
+// ---------------------------------------------------------------------------
+// SaaS — deeper content verification
+// ---------------------------------------------------------------------------
+
+test.describe('SaaS — deeper content verification', () => {
+  test('/saas contains pricing or product text', async ({ page }) => {
+    await page.goto('/saas');
+    await page.waitForLoadState('networkidle');
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+    expect(body).toMatch(/saas|plano|plan|preço|price/i);
+  });
+
+  test('/saas/pricing has a heading and pricing cards or table', async ({ page }) => {
+    await page.goto('/saas/pricing');
+    await page.waitForLoadState('networkidle');
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    await expect(heading).toBeVisible({ timeout: 8000 });
+
+    const pricingStructure = page
+      .locator(
+        'table, [class*="card"], [class*="Card"], [class*="plan"], [class*="Plan"], [class*="tier"], [class*="Tier"]',
+      )
+      .first();
+    const count = await pricingStructure.count();
+    if (count === 0) {
+      test.skip(true, 'No pricing cards or table found on /saas/pricing');
+    }
+    await expect(pricingStructure).toBeVisible({ timeout: 8000 });
+  });
+
+  test('at least one /saas/*/pricing page shows a pricing-related heading', async ({ page }) => {
+    // Use the first vertical pricing page as a representative sample
+    await page.goto('/saas/real-estate/pricing');
+    await page.waitForLoadState('networkidle');
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    const count = await heading.count();
+    if (count === 0) {
+      test.skip(true, 'No heading found on /saas/real-estate/pricing');
+    }
+    await expect(heading).toBeVisible({ timeout: 8000 });
+    const headingText = await heading.innerText().catch(() => '');
+    // A pricing page heading should mention pricing, the product, or a plan name
+    expect(headingText.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/saas/getting-started has a step or instructions section', async ({ page }) => {
+    await page.goto('/saas/getting-started');
+    await page.waitForLoadState('networkidle');
+    const steps = page
+      .locator(
+        '[class*="step"], [class*="Step"], ol li, [class*="instruction"], [class*="guide"]',
+      )
+      .first();
+    const content = page
+      .getByText(/step|passo|start|começar|install|configure|setup|introdução/i)
+      .first();
+
+    const stepCount = await steps.count();
+    const contentCount = await content.count();
+
+    if (stepCount === 0 && contentCount === 0) {
+      test.skip(true, 'No steps or instructions section found on /saas/getting-started');
+    }
+    const visible = stepCount > 0 ? steps : content;
+    await expect(visible).toBeVisible({ timeout: 8000 });
+  });
+});

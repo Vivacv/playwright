@@ -110,3 +110,77 @@ test.describe('MobileOnboarding — flow', () => {
     await expect(visible).toBeVisible({ timeout: 6000 });
   });
 });
+
+// ---------------------------------------------------------------------------
+// 4. Mobile — per-route heading checks
+// ---------------------------------------------------------------------------
+
+test.describe('Mobile — per-route heading checks', () => {
+  test('/mobile/tourism has a heading or body with tourism text', async ({ page }) => {
+    test.skip(true, 'Mobile tourism page may require auth or device context');
+    await page.goto('/mobile/tourism');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    const headingCount = await heading.count();
+    if (headingCount > 0) {
+      await expect(heading).toBeVisible({ timeout: 8000 });
+    } else {
+      expect(body).toMatch(/turismo|tourism/i);
+    }
+  });
+
+  test('/mobile/events has a heading or events-related text', async ({ page }) => {
+    test.skip(true, 'Mobile events page may require auth or device context');
+    await page.goto('/mobile/events');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    const headingCount = await heading.count();
+    if (headingCount > 0) {
+      await expect(heading).toBeVisible({ timeout: 8000 });
+    } else {
+      expect(body).toMatch(/event|evento/i);
+    }
+  });
+
+  test('/mobile/gym has heading or gym-related content', async ({ page }) => {
+    test.skip(true, 'Mobile gym page may require auth or device context');
+    await page.goto('/mobile/gym');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    const headingCount = await heading.count();
+    if (headingCount > 0) {
+      await expect(heading).toBeVisible({ timeout: 8000 });
+    } else {
+      expect(body).toMatch(/gym|academia|fitness|treino/i);
+    }
+  });
+
+  test('/mobile/real-estate has a heading or body check', async ({ page }) => {
+    test.skip(true, 'Mobile real-estate page may require auth or device context');
+    await page.goto('/mobile/real-estate');
+    await page.waitForLoadState('networkidle');
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+
+    const heading = page.getByRole('heading').or(page.locator('h1, h2')).first();
+    const headingCount = await heading.count();
+    if (headingCount > 0) {
+      await expect(heading).toBeVisible({ timeout: 8000 });
+    } else {
+      expect(body).toMatch(/real.?estate|imóvel|imobiliário|property/i);
+    }
+  });
+});

@@ -147,3 +147,58 @@ test.describe('MFE — performance marks', () => {
     // If LCP is 0 (no entry yet / SSR) we skip the assertion silently
   });
 });
+
+// ---------------------------------------------------------------------------
+// 5. MFE — lazy chunk loading
+// ---------------------------------------------------------------------------
+
+test.describe('MFE — lazy chunk loading', () => {
+  test('/protected-app loads without crash after shell nav is visible', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const shellNav = page.locator('nav, header, [role="navigation"]').first();
+    await expect(shellNav).toBeVisible({ timeout: 8000 });
+
+    await page.goto('/protected-app');
+    await page.waitForLoadState('networkidle').catch(() => {
+      // networkidle timeout is non-fatal; body check below is the assertion
+    });
+
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing — /protected-app redirected to auth');
+    }
+
+    const body = await page.locator('body').innerText().catch(() => '');
+    expect(body.trim().length).toBeGreaterThan(0);
+  });
+
+  test('/protected-app/dashboard renders within 10s', async ({ page }) => {
+    await page.goto('/protected-app/dashboard');
+    await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {
+      // Non-fatal — content check below is the real assertion
+    });
+
+    if (page.url().includes('/auth')) {
+      test.skip(true, 'Auth state missing — dashboard redirected to auth');
+    }
+
+    const content = page
+      .locator('main, [role="main"], h1, h2, [class*="Card"], [class*="dashboard"]')
+      .first();
+    await expect(content).toBeVisible({ timeout: 10000 });
+  });
+
+  test('shell navigation element count > 0 after full load', async ({ page }) => {
+    await page.goto('/');
+    await page.waitForLoadState('networkidle');
+
+    const navElements = page.locator('nav, [role="navigation"]');
+    const count = await navElements.count();
+    expect(count).toBeGreaterThan(0);
+
+    // Verify at least one nav element is actually visible
+    const firstNav = navElements.first();
+    await expect(firstNav).toBeVisible({ timeout: 8000 });
+  });
+});
